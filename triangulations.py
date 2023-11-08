@@ -60,7 +60,7 @@ class Triangulations():
     def generate_mesh_data(self, parent):
         exclusion_holes = self.generate_inclusion_data(parent)
         points_by_layer = {}
-        for layer_list in parent.tracker_dict['show_layer_names']:
+        for layer_list in parent.tracker_dict['show_single_layer']:
             if layer_list['show']:
                 for data in parent.radius_data:
                     site_id = data['site_id']
@@ -96,7 +96,7 @@ class Triangulations():
 
     def generate_inclusion_data(self, parent):
         inclusion_holes = {}
-        for layer_list in parent.tracker_dict['show_layer_names']:
+        for layer_list in parent.tracker_dict['show_single_layer']:
             if layer_list['show']:
                 for data in parent.radius_data:
                     site_id = data['site_id']

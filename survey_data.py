@@ -25,19 +25,19 @@ class SurveyData():
         # sub_data = [d for d in all_data if all(d['site_id'] != x['site_id'] for x in local_data)]
 
         local_ids = set(d['site_id'] for d in local_data)
-        sub_data = [d for d in all_data if d['site_id'] not in local_ids]
-        pos, size, color = create_collar_pos(parent.darkmode, sub_data, True)
         loc_pos, loc_size, loc_color = create_collar_pos(parent.darkmode, local_data, False)
-
-
-        pos_data = gl.GLScatterPlotItem(pos=pos, size=size, color=color, pxMode=False)
         loc_pos_data = gl.GLScatterPlotItem(pos=loc_pos, size=loc_size, color=loc_color, pxMode=False)
 
-        if not parent.darkmode:
-            pos_data.setGLOptions('translucent') # Allows usage of a 'white' background
-            ''' See more information here regarding plotting on a white background:
-                https://github.com/pyqtgraph/pyqtgraph/issues/193
-            '''
+        sub_data = [d for d in all_data if d['site_id'] not in local_ids]
+        if sub_data:
+            pos, size, color = create_collar_pos(parent.darkmode, sub_data, True)
+            pos_data = gl.GLScatterPlotItem(pos=pos, size=size, color=color, pxMode=False)
+            if not parent.darkmode:
+                pos_data.setGLOptions('translucent') # Allows usage of a 'white' background
+                ''' See more information here regarding plotting on a white background:
+                    https://github.com/pyqtgraph/pyqtgraph/issues/193
+                '''
+            ObjectIO.add_view_items(parent, pos_data, 'show_all_pos')
 
         def calculate_euclidean_center(pos):
             # grid_dims return for grid sizing - currently unused
@@ -51,7 +51,6 @@ class SurveyData():
 
             return euc_center.tolist(), grid_dims.tolist()
 
-        ObjectIO.add_view_items(parent, pos_data, 'show_all_pos')
         parent.bool_dict['show_all_pos'] = True
 
         if local_data:

@@ -82,7 +82,7 @@ class Text():
                         layer_counter[layer] += 1
 
                     instance = layer_counter[layer]
-                    for layer_list in parent.tracker_dict['show_layer_names']:
+                    for layer_list in parent.tracker_dict['show_single_layer']:
                         # If this layer is currently set to show in the visualization
                         if layer == layer_list['layer_name'] and layer_list['show']:
                             mid_depth = (z_from + z_to) / 2   # Calculate mid-point depth
@@ -93,7 +93,7 @@ class Text():
                                 northing,
                                 text_depth,
                                 layer,
-                                ('show_layer_names', layer, site_id, instance)
+                                ('show_single_layer', layer, site_id, instance)
                             )
 
     def add_text(self, parent, x_coord, y_coord, z_coord, label_text, tracker):

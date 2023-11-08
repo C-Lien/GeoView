@@ -55,7 +55,7 @@ class ParameterTree():
             lambda: Toggle.toggle_local_dh_survey_display(parent))
 
         parent.p2.child('Label Features','Triangulation').sigValueChanged.connect(
-            lambda: Toggle.toggle_local_triangulations_display(parent))
+            lambda: Toggle.toggle_local_triangulations_all_display(parent))
 
     def p3_tree(parent, layer_list):
         try:
@@ -74,7 +74,7 @@ class ParameterTree():
                         )
         parent.t3.setParameters(parent.p3, showTop=False)
 
-        parent.tracker_dict['show_layer_names'] = []
+        parent.tracker_dict['show_single_layer'] = []
 
         # parent.bool_dict['show_local_names'] = True
         # parent.p2.child('Label Features', 'Local labels').setValue(True)
@@ -86,10 +86,11 @@ class ParameterTree():
             parent.p3.addChild({'name': layer_name, 'type': 'bool', 'value': False})
             layer_dict = {'layer_name':layer_name, 'show':False, 'tracking':[]}
 
-            parent.tracker_dict['show_layer_names'].append(layer_dict)
+            parent.tracker_dict['show_single_layer'].append(layer_dict)
             parent.p2.child('Label Features', 'Layer labels').setValue(True)
-            parent.bool_dict['show_layer_names'] = True
+            parent.bool_dict['show_single_layer'] = True
 
             parent.p3.child(layer_name).sigValueChanged.connect(
                 lambda layer_name=layer_name:
-                    Toggle.toggle_local_layer_text_single_display(parent, layer_name.name()))
+                    Toggle.toggle_local_layer_single_display(parent, layer_name.name())
+                    )

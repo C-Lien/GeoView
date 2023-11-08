@@ -4,9 +4,9 @@ import logging
 class ObjectIO():
 
     def clear_view_items(parent, tracker):
-        if tracker == 'show_layer_names':
+        if tracker == 'show_single_layer':
             try:
-                for layer_list in parent.tracker_dict['show_layer_names']:
+                for layer_list in parent.tracker_dict['show_single_layer']:
                     if layer_list['show']:
                         for item in layer_list['tracking']:
                             parent.view3d.removeItem(item['view'])
@@ -22,10 +22,10 @@ class ObjectIO():
     def add_view_items(parent, item_key, tracker):
         parent.view3d.addItem(item_key)
 
-        if isinstance(tracker, tuple) and tracker[0] == 'show_layer_names':
+        if isinstance(tracker, tuple) and tracker[0] == 'show_single_layer':
             _, layer_name, site_id, instance = tracker
 
-            for layer_list in parent.tracker_dict['show_layer_names']:
+            for layer_list in parent.tracker_dict['show_single_layer']:
                 if layer_name == layer_list['layer_name']:
                     view_dict = {
                         'hole': site_id,
