@@ -19,9 +19,9 @@ class GuiMenu:
         import_menu.addAction(import_lith_data_action)
         import_lith_data_action.triggered.connect(parent.import_lith_data)
 
-        import_dh_survey_data_action = QAction("Downhole Survey Data - WIP", parent)
+        import_dh_survey_data_action = QAction("Downhole Survey Data", parent)
         import_menu.addAction(import_dh_survey_data_action)
-        # import_dh_survey_data_action.triggered.connect(parent.xxx)
+        import_dh_survey_data_action.triggered.connect(parent.import_dh_survey_data)
 
         return file_menu
 
@@ -38,6 +38,7 @@ class GuiMenu:
 
         return settings_menu
 
+    '''
     @staticmethod # Currently dummy data - WIP
     def create_view_menu(parent):
         view_direction_menu = QMenu("View Direction - WIP", parent)
@@ -58,23 +59,27 @@ class GuiMenu:
         view_direction_menu.addAction(set_plan_view_action)
 
         return view_direction_menu
+    '''
 
-    @staticmethod # Currently dummy data - WIP
+    @staticmethod
     def create_desurvey_menu(parent):
-        desurvey_menu = QMenu("Desurvey - WIP", parent)
-        apply_desurvey = QMenu("Apply Desurvey Method", parent)
+        desurvey_menu = QMenu("Desurvey", parent)
 
-        desurvey_mcc = QAction("Minimum Curvature Method (MCC)")
-        apply_desurvey.addAction(desurvey_mcc)
+        apply_desurvey = QMenu("Apply Desurvey", parent)
+        desurvey_menu.addMenu(apply_desurvey)
 
-        desurvey_avg_t = QAction("Average Tangent Method")
-        apply_desurvey.addAction(desurvey_avg_t)
+        toggle_desurvey_action = QAction("Minimum Curvature Method", parent)
+        apply_desurvey.addAction(toggle_desurvey_action)
+        toggle_desurvey_action.triggered.connect(parent.apply_desurvey_method)
 
-        desurvey_true_t = QAction("True Tangent Method")
-        apply_desurvey.addAction(desurvey_true_t)
+        # desurvey_avg_t = QAction("Average Tangent Method")
+        # apply_desurvey.addAction(desurvey_avg_t)
 
-        remove_desurvey = QAction("Remove Desurvey")
-        desurvey_menu.addAction(remove_desurvey)
+        # desurvey_true_t = QAction("True Tangent Method")
+        # apply_desurvey.addAction(desurvey_true_t)
+
+        remove_desurvey_action = QAction("Remove Desurvey", parent)
+        desurvey_menu.addAction(remove_desurvey_action)
 
         return desurvey_menu
 

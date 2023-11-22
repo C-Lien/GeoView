@@ -36,14 +36,14 @@ class SetHoleData():
         '''
         try:
             if parent.selected_hole_coords is not None:
-                ResetData.reset_all_data(parent) # Reset all data
+                ResetData.reset_all_data(parent)
 
                 select_radius = int(radius)
                 radius_data, layer_list, horizon_list = SetHoleData().set_radius_data(parent, select_radius)
                 parent.radius_data = radius_data
 
                 SurveyData.plot_survey_collars(parent, parent.all_data, radius_data)
-                Toggle.toggle_local_names_display(parent) # Toggle local text
+                Toggle.toggle_local_names_display(parent)
 
                 # for layer_name in layer_list:
                 #     Toggle.toggle_local_layer_text_display(parent, layer_name)
@@ -80,6 +80,7 @@ class SetHoleData():
 
                 # Filter radius_lith
                 for item in parent.all_data:
+                    # Apply pythag for radius over a 'square'
                     if abs(easting - item['easting']) < select_radius and \
                         abs(northing - item['northing']) < select_radius:
 

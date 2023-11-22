@@ -157,9 +157,14 @@ class ReadData():
                             'layer': row['WSECT'],
                             'lith': row['ROCK'],
                             'from': float(row['DEPTH_FROM']),
+                            'fromx': 0,
+                            'fromy': 0,
                             'depth': float(row['DEPTH_TO']),
+                            'depthx': 0,
+                            'depthy': 0
                         }
                         lith_mapping[row['HOLE']].append(lith_dict)
+
                     except ValueError as e:
                         logging.error(f"An error occurred while parsing lithological data: {e}")
                         continue
@@ -172,3 +177,35 @@ class ReadData():
             logging.error(f"An error occurred while building lithological dictionary: {e}")
 
         return site_data, file_dir
+
+    def build_dh_survey_dictionary(self, has_file, file_dir, site_data):
+        if not has_file:
+            file_dir = self.get_file_location()
+
+        if not file_dir:
+            return site_data, None
+
+        dh_survey_data = defaultdict(list)
+        # dh_survey_data = {}
+
+        try:
+            with open(file_dir, 'r') as f:
+                file_data = DictReader(f)
+                for row in file_data:
+                    try:
+                        dh_survey_dict = {
+                            'depth': row['DEPTH'],
+                            'azimuth': row['AZI'],
+                            'inclination': float(row['TILT']),
+                            'dip': float(row['DIP']),
+                        }
+                        dh_survey_data[row['HOLE']].append(dh_survey_dict)
+
+                    except ValueError as e:
+                        logging.error(f"An error occurred while parsing gpx survey data: {e}")
+                        continue
+
+        except Exception as e:
+            logging.error(f"An error occured while building gpx survey dictionary: {e}")
+
+        return dh_survey_data, file_dir

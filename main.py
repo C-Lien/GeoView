@@ -16,6 +16,7 @@ from gui_window import GuiWindow
 from parameter_tree import ParameterTree
 from survey_data import SurveyData
 from reset_data import ResetData
+from desurvey import Desurvey
 
 
 class Main(QMainWindow):
@@ -47,6 +48,7 @@ class Main(QMainWindow):
     def __init__(self, ):
         super().__init__()
         self.darkmode = True # Temporary - Add to settings
+        self.desurvey_status = False # Default no desurvey applied
 
         ''' ISSUE:      Excessive issue of 'False' where only 'True' required
             ACTION:     Set `bool_dict` and `tracker_dict` as {}. Append in
@@ -116,11 +118,12 @@ class Main(QMainWindow):
 
         file_menu = menu_gui.create_file_menu(self)
         settings_menu = menu_gui.create_settings_menu(self)
+        create_desurvey_menu = menu_gui.create_desurvey_menu(self)
 
         menu_bar.addMenu(file_menu)
         menu_bar.addMenu(settings_menu)
-        menu_bar.addMenu("View") # Dummy Menu - WIP
-        menu_bar.addMenu("Desurvey") # Dummy Menu - WIP
+        # menu_bar.addMenu("View") # Dummy Menu - WIP
+        menu_bar.addMenu(create_desurvey_menu)
 
         lPanelMenu, self.t1, self.t2, self.t3 = GuiWindow.create_window(self, lPanelMenu, lPanelSize)
 
@@ -211,11 +214,41 @@ class Main(QMainWindow):
             return
         try:
             self.all_data, lith_directory = ReadData().build_lith_dictionary(False, None, self.all_data)
+
+            # Hard reset of all data
             local_data = []
             ResetData.reset_all_data(self)
             SurveyData.plot_survey_collars(self, self.all_data, local_data)
+
         except Exception as e:
             logging.error(f"An error occurred while opening lithological data: {e}")
+
+    def import_dh_survey_data(self):
+        if not self.all_data:
+            logging.info("No survey data selected.")
+            return
+        try:
+            self.dh_survey_data, dh_survey_directory = ReadData().build_dh_survey_dictionary(False, None, self.all_data)
+        except Exception as e:
+            logging.error(f"An error occured while opening gpx survey data: {e}")
+
+    def apply_desurvey_method(self):
+        if not self.dh_survey_data:
+            logging.info("No gpx survey data selected.")
+            return
+        if self.desurvey_status:
+            logging.info("Desurvey already applied.")
+            return
+        try:
+            self.all_data, self.desurvey_status = Desurvey().minimum_curvature(self.all_data, self.dh_survey_data)
+
+            # Hard reset of all data
+            local_data = []
+            ResetData.reset_all_data(self)
+            SurveyData.plot_survey_collars(self, self.all_data, local_data)
+
+        except Exception as e:
+            logging.error(f"An error occured while applying gpx survey data: {e}")
 
 if __name__ == '__main__':
     ''' Consider moving `import` methods to own class.
