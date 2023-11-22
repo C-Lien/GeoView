@@ -60,17 +60,18 @@ class PlotDownholeString():
             for surveys in survey_data[site_id]:
                 current_position = np.array([easting, northing, height], dtype='float64')
 
-                for i in range(len(surveys) - 1):
-                    depth1 = float(surveys[i]['depth'])
-                    inc1 = float(surveys[i]['inclination'])
-                    azi1 = float(surveys[i]['azimuth'])
+                for i in range(len(survey_data[site_id]) - 1):
+                    depth1 = float(survey_data[site_id][i]['depth'])
+                    inc1 = float(survey_data[site_id][i]['inclination'])
+                    azi1 = float(survey_data[site_id][i]['azimuth'])
 
-                    depth2 = float(surveys[i+1]['depth'])
-                    inc2 = float(surveys[i+1]['inclination'])
-                    azi2 = float(surveys[i+1]['azimuth'])
+                    depth2 = float(survey_data[site_id][i+1]['depth'])
+                    inc2 = float(survey_data[site_id][i+1]['inclination'])
+                    azi2 = float(survey_data[site_id][i+1]['azimuth'])
 
                     # Calculate displacement between the current and next survey point
                     dx, dy, dz = calculate_displacement(depth1, inc1, azi1, depth2, inc2, azi2)
+                    dz = -dz # inverse for vertical positioning
 
                     # Update current position
                     current_position += np.array([dx, dy, dz], dtype='float64')
@@ -84,7 +85,7 @@ class PlotDownholeString():
         ''' End experimental application'''
         #######################################################################
 
-        step_int = 1
+        step_int = 1.0
         data_points = []
 
         if parent.desurvey_status:
@@ -95,8 +96,8 @@ class PlotDownholeString():
                 height = data['height']
 
                 point = process_survey_data(site_id, easting, northing, height, parent.dh_survey_data)
-
-                data_points.extend(point)
+                if point is not None:
+                    data_points.extend(point)
 
         else:
             for data in parent.radius_data:
