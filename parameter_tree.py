@@ -83,6 +83,7 @@ class ParameterTree():
         # layer_list = [detail['layer'] for data in parent.all_data for detail in data['lith_details'] if detail['layer']]
 
         for layer_name in layer_list:
+            # Augment with `ordered_layers` in main() -> for ordered presentation!`
             parent.p3.addChild({'name': layer_name, 'type': 'bool', 'value': False})
             layer_dict = {'layer_name':layer_name, 'show':False, 'tracking':[]}
 

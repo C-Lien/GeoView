@@ -146,7 +146,13 @@ class Triangulations():
           raise ValueError(f"'{color}' is not a supported color.")
 
         r_color, g_color, b_color, alpha = colors_dict[color]
-
+        ''' In the below, besides the fact this can clearly be improved upon for
+            speed purposes - we will also add a check for the max(depth) of the
+            target hole where if the `max(depth)` < the relative `from_depth` of
+            the triangulated nearest three holes then we will NOT exclude this
+            from the triangulation process. This will let us plot 'through' the
+            hole - which is most reasonable for when no data exist!
+        '''
         idx_tracker = []
         for idx, sub_array in enumerate(vertices):
             for row in sub_array:

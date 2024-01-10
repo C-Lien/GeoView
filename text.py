@@ -66,13 +66,13 @@ class Text():
         layer_counter = {}  # Counter dictionary to keep track of layer instances
         for data in parent.radius_data:
             site_id = data['site_id']
-            easting = data['easting']
-            northing = data['northing']
+            easting = data['easting'] # to be augmented by desurvey
+            northing = data['northing'] # to be augmented by desurvey
             height = data['height']
             lith_details = data['lith_details']
             for interval in lith_details:
-                z_from = -float(interval['from'])
-                z_to = -float(interval['depth'])
+                z_from = -float(interval['from']) # to be augmented by desurvey
+                z_to = -float(interval['depth']) # to be augmented by desurvey
                 layer = interval['layer']
 
                 if layer:  # If the layer name exists

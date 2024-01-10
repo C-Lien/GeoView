@@ -5,6 +5,7 @@ import pyqtgraph.opengl as gl
 
 # Other libraries
 import numpy as np
+# np.set_printoptions(suppress=True) # Readable print-outs...
 from object_io import ObjectIO
 
 
@@ -27,7 +28,7 @@ class PlotDownholeString():
         ''' Experimental Desurvey application '''
         #######################################################################
 
-        # Helper function to calculate displacement between two survey points
+        # Minimum curvature desurvey function to calculate displacement
         def calculate_displacement(depth1, inc1, azi1, depth2, inc2, azi2):
 
             inc1_rad = np.radians(inc1)
@@ -35,12 +36,7 @@ class PlotDownholeString():
             inc2_rad = np.radians(inc2)
             azi2_rad = np.radians(azi2)
 
-            # Calculate the average inclination and azimuth
-            # avg_inc = (inc1_rad + inc2_rad) / 2.0
-            # avg_azi = (azi1_rad + azi2_rad) / 2.0
-
-            # Calculate ratio factor RF
-            # This is a simplified version; more precice methodology to be implemented as required
+            # Calculate ratio factor RF - Simplified!
             MD = depth2 - depth1
             dogleg_severity = np.sqrt((inc2_rad - inc1_rad)**2 + (azi2_rad - azi1_rad)**2)
             RF = 2 / dogleg_severity * np.tan(dogleg_severity / 2)
@@ -56,27 +52,33 @@ class PlotDownholeString():
         def process_survey_data(site_id, easting, northing, height, survey_data):
             desurveyed_points = []
 
-            # Initialize the starting point at the surface
+            # Initialise the starting point at the surface
             for surveys in survey_data[site_id]:
                 current_position = np.array([easting, northing, height], dtype='float64')
 
                 for i in range(len(survey_data[site_id]) - 1):
                     depth1 = float(survey_data[site_id][i]['depth'])
-                    inc1 = float(survey_data[site_id][i]['inclination'])
-                    azi1 = float(survey_data[site_id][i]['azimuth'])
-
                     depth2 = float(survey_data[site_id][i+1]['depth'])
-                    inc2 = float(survey_data[site_id][i+1]['inclination'])
-                    azi2 = float(survey_data[site_id][i+1]['azimuth'])
 
-                    # Calculate displacement between the current and next survey point
-                    dx, dy, dz = calculate_displacement(depth1, inc1, azi1, depth2, inc2, azi2)
+                    if float(survey_data[site_id][i]['depth']) > 10: # Magic starting number
+                        ''' "starting depth" for desurvey. Between 10 and 20 works well.
+                        Don't make this too deep otherwise the hole will be out.'''
+
+                        inc1 = float(survey_data[site_id][i]['inclination'])
+                        azi1 = float(survey_data[site_id][i]['azimuth'])
+
+                        inc2 = float(survey_data[site_id][i+1]['inclination'])
+                        azi2 = float(survey_data[site_id][i+1]['azimuth'])
+
+                        # Calculate displacement between the current and next survey point
+                        dx, dy, dz = calculate_displacement(depth1, inc1, azi1, depth2, inc2, azi2)
+                    else:
+                        # A perfectly straight hole - Keep it as shallow as possible.
+                        dz = (depth2 - depth1)
+                        dx, dy = 0, 0
+
                     dz = -dz # inverse for vertical positioning
-
-                    # Update current position
                     current_position += np.array([dx, dy, dz], dtype='float64')
-
-                    # Add current position to list of desurveyed points
                     desurveyed_points.append(current_position.copy())
 
                 return desurveyed_points
@@ -85,8 +87,9 @@ class PlotDownholeString():
         ''' End experimental application'''
         #######################################################################
 
-        step_int = 1.0
+        step_int = 2.0
         data_points = []
+        print(f'Current Desurvey Status on DH plot: {parent.desurvey_status}')
 
         if parent.desurvey_status:
             for data in parent.radius_data:
@@ -94,7 +97,6 @@ class PlotDownholeString():
                 easting = data['easting']
                 northing = data['northing']
                 height = data['height']
-
                 point = process_survey_data(site_id, easting, northing, height, parent.dh_survey_data)
                 if point is not None:
                     data_points.extend(point)
@@ -112,7 +114,6 @@ class PlotDownholeString():
 
         data_arr = np.array(data_points)
         pos, size, color = create_dh_pos(parent.darkmode, data_arr)
-
         pos_data = gl.GLScatterPlotItem(pos=pos, size=size,
                                         color=color, pxMode=False)
 

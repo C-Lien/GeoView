@@ -27,13 +27,6 @@ class SetHoleData():
             logging.error("No valid Hole ID selected.")
 
     def set_radius_value(parent, radius):
-        ''' It sure would be nice to have the ScatterPlotItem and TextItem draw
-            as a different colour - Perhaps we could highlight this as "Red"
-            and remove overlapping data from `all`?
-
-            Then we would need to add/ remove object view on `all` for just
-            this selected part - Consider this a `nice to have` feature.
-        '''
         try:
             if parent.selected_hole_coords is not None:
                 ResetData.reset_all_data(parent)
@@ -57,6 +50,11 @@ class SetHoleData():
             logging.error("The entered value must be an integer.")
 
     def set_radius_data(self, parent, select_radius):
+        if parent.desurvey_status:
+            data = parent.all_desurvey_data
+        else:
+            data = parent.all_data
+
         radius_data = []
         layer_list = set()
         horizon_list = set()
@@ -70,7 +68,7 @@ class SetHoleData():
             easting, northing = None, None
 
             # Find easting and northing for the selected hole
-            for item in parent.all_data:
+            for item in data:
                 if item['site_id'] == parent.selected_hole:
                     easting = item['easting']
                     northing = item['northing']
@@ -79,8 +77,8 @@ class SetHoleData():
             if easting is not None and northing is not None:
 
                 # Filter radius_lith
-                for item in parent.all_data:
-                    # Apply pythag for radius over a 'square'
+                for item in data:
+                    # TO-DO: Apply pythag for radius over a 'square'
                     if abs(easting - item['easting']) < select_radius and \
                         abs(northing - item['northing']) < select_radius:
 

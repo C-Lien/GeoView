@@ -80,6 +80,7 @@ class GuiMenu:
 
         remove_desurvey_action = QAction("Remove Desurvey", parent)
         desurvey_menu.addAction(remove_desurvey_action)
+        remove_desurvey_action.triggered.connect(parent.remove_desurvey_method)
 
         return desurvey_menu
 
