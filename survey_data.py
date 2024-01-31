@@ -6,7 +6,7 @@ from object_io import ObjectIO
 
 class SurveyData():
 
-    def plot_survey_collars(parent, all_data, local_data):
+    def plot_survey_collars(parent, local_data):
 
         def create_collar_pos(darkmode, data, sub_bool):
             list_len = len(data)
@@ -28,7 +28,7 @@ class SurveyData():
         loc_pos, loc_size, loc_color = create_collar_pos(parent.darkmode, local_data, False)
         loc_pos_data = gl.GLScatterPlotItem(pos=loc_pos, size=loc_size, color=loc_color, pxMode=False)
 
-        sub_data = [d for d in all_data if d['site_id'] not in local_ids]
+        sub_data = [d for d in parent.all_data if d['site_id'] not in local_ids]
         if sub_data:
             pos, size, color = create_collar_pos(parent.darkmode, sub_data, True)
             pos_data = gl.GLScatterPlotItem(pos=pos, size=size, color=color, pxMode=False)

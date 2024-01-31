@@ -72,12 +72,6 @@ class GuiMenu:
         apply_desurvey.addAction(toggle_desurvey_action)
         toggle_desurvey_action.triggered.connect(parent.apply_desurvey_method)
 
-        # desurvey_avg_t = QAction("Average Tangent Method")
-        # apply_desurvey.addAction(desurvey_avg_t)
-
-        # desurvey_true_t = QAction("True Tangent Method")
-        # apply_desurvey.addAction(desurvey_true_t)
-
         remove_desurvey_action = QAction("Remove Desurvey", parent)
         desurvey_menu.addAction(remove_desurvey_action)
         remove_desurvey_action.triggered.connect(parent.remove_desurvey_method)

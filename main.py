@@ -83,6 +83,7 @@ class Main(QMainWindow):
 
         # Create 3D view widget
         self.view3d = gl.GLViewWidget(self)
+
         if self.darkmode:
             self.view3d.setBackgroundColor('black')
         else:
@@ -112,6 +113,7 @@ class Main(QMainWindow):
     def import_survey_data(self):
         all_data = []
         self.all_desurvey_data = []
+        self.dh_survey_data = []
         try:
             all_data, survey_directory = ReadData().build_survey_dictionary(False, None)
         except Exception as e:
@@ -123,7 +125,7 @@ class Main(QMainWindow):
 
             ParameterTree.p1_tree(self)
             ParameterTree.p2_tree(self)
-            SurveyData.plot_survey_collars(self, all_data, local_data)
+            SurveyData.plot_survey_collars(self, local_data)
 
     def import_lith_data(self):
         if not self.all_data:
@@ -131,12 +133,12 @@ class Main(QMainWindow):
             return
 
         try:
-            self.all_data, lith_directory, self.ordered_layers = ReadData().build_lith_dictionary(False, None, self.all_data)
+            self.all_data, lith_directory, self.ordered_layers = ReadData().build_lith_dictionary(self, False, None)
 
             # Hard reset of all data
             local_data = []
             ResetData.reset_all_data(self)
-            SurveyData.plot_survey_collars(self, self.all_data, local_data)
+            SurveyData.plot_survey_collars(self, local_data)
 
         except Exception as e:
             logging.error(f"An error occurred while opening lithological data: {e}")
@@ -147,7 +149,7 @@ class Main(QMainWindow):
             return
 
         try:
-            self.dh_survey_data, dh_survey_directory = ReadData().build_dh_survey_dictionary(False, None, self.all_data)
+            self.dh_survey_data, dh_survey_directory = ReadData().build_dh_survey_dictionary(self, False, None)
         except Exception as e:
             logging.error(f"An error occured while opening gpx survey data: {e}")
 
@@ -168,17 +170,17 @@ class Main(QMainWindow):
             # Hard reset of all data
             local_data = []
             ResetData.reset_all_data(self)
-            SurveyData.plot_survey_collars(self, self.all_data, local_data)
+            SurveyData.plot_survey_collars(self, local_data)
 
             return
 
         try:
-            self.all_desurvey_data, self.desurvey_status = Desurvey().minimum_curvature(self.all_data, self.dh_survey_data)
+            self.all_downhole_string, self.all_desurvey_data = Desurvey().minimum_curvature(self)
 
             # Hard reset of all data
             local_data = []
             ResetData.reset_all_data(self)
-            SurveyData.plot_survey_collars(self, self.all_data, local_data)
+            SurveyData.plot_survey_collars(self, local_data)
 
         except Exception as e:
             logging.error(f"An error occured while applying gpx survey data: {e}")
@@ -191,7 +193,7 @@ class Main(QMainWindow):
                 # Hard reset of all data
                 local_data = []
                 ResetData.reset_all_data(self)
-                SurveyData.plot_survey_collars(self, self.all_data, local_data)
+                SurveyData.plot_survey_collars(self, local_data)
 
             except Exception as e:
                 logging.error(f"An error occured while reseting gpx survey data: {e}")

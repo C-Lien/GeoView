@@ -50,12 +50,12 @@ class ReadData():
 
         return site_data, file_dir
 
-    def build_lith_dictionary(self, has_file, file_dir, site_data):
+    def build_lith_dictionary(self, parent, has_file, file_dir):
         if not has_file:
             file_dir = self.get_file_location()
 
         if not file_dir:
-            return site_data, None
+            return parent.all_data, None
 
         lith_mapping = defaultdict(list)
         layer_depths = defaultdict(list)
@@ -86,21 +86,21 @@ class ReadData():
             min_depths = { layer: min(depths) for layer, depths in layer_depths.items() }
             ordered_layers = sorted(min_depths, key=min_depths.get)
 
-            for site in site_data:
+            for site in parent.all_data:
                 if site['site_id'] in lith_mapping:
                     site['lith_details'].extend(lith_mapping[site['site_id']])
 
         except Exception as e:
             logging.error(f"An error occurred while building lithological dictionary: {e}")
 
-        return site_data, file_dir, ordered_layers
+        return parent.all_data, file_dir, ordered_layers
 
-    def build_dh_survey_dictionary(self, has_file, file_dir, site_data):
+    def build_dh_survey_dictionary(self, parent, has_file, file_dir):
         if not has_file:
             file_dir = self.get_file_location()
 
         if not file_dir:
-            return site_data, None
+            return parent.all_data, None
 
         dh_survey_data = defaultdict(list)
         # dh_survey_data = {}

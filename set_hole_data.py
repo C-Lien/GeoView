@@ -35,7 +35,7 @@ class SetHoleData():
                 radius_data, layer_list, horizon_list = SetHoleData().set_radius_data(parent, select_radius)
                 parent.radius_data = radius_data
 
-                SurveyData.plot_survey_collars(parent, parent.all_data, radius_data)
+                SurveyData.plot_survey_collars(parent, radius_data)
                 Toggle.toggle_local_names_display(parent)
 
                 # for layer_name in layer_list:
