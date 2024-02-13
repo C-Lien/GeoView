@@ -21,39 +21,7 @@ class Text():
                 https://github.com/tlorach/OpenGLText - Potential. Return later.
     '''
 
-    '''
-    // This can be ignored - Left here for historical reference
-
-    # def create_text_pos(self, parent, data, survey_bool):
-    #     list_len = len(data)
-
-    #     if survey_bool:
-    #         pos = np.array([(site['easting'], site['northing'], site['height'] + 10) for site in data])
-    #     else:
-    #         pos = np.array([(site['easting'], site['northing'], site['height']) for site in data])
-
-    #     if parent.darkmode:
-    #         color = np.full((list_len, 3), [255, 255, 255])
-    #     else:
-    #         color = np.full((list_len, 3), [0, 0, 0])
-
-    #     label = np.array([(site['site_id']) for site in data])
-
-    #     return pos, label, color
-    '''
-
     def set_survey_text(self, parent, data, tracker):
-        '''
-        # pos, label, color = self.create_text_pos(parent, data, True)
-
-        # text_item = gl.GLTextItem(pos=pos,
-        #                     text=label,
-        #                     font=QFont('Helvetica', 8),
-        #                     color=color)
-
-        # ObjectIO.add_view_items(parent, text_item, tracker)
-        '''
-
         for hole in data:
             self.add_text(parent,
                           hole['easting'],
@@ -66,13 +34,13 @@ class Text():
         layer_counter = {}  # Counter dictionary to keep track of layer instances
         for data in parent.radius_data:
             site_id = data['site_id']
-            easting = data['easting'] # to be augmented by desurvey
-            northing = data['northing'] # to be augmented by desurvey
+            easting = data['easting']
+            northing = data['northing']
             height = data['height']
             lith_details = data['lith_details']
             for interval in lith_details:
-                z_from = -float(interval['from']) # to be augmented by desurvey
-                z_to = -float(interval['depth']) # to be augmented by desurvey
+                z_from = -float(interval['from'])
+                z_to = -float(interval['depth'])
                 layer = interval['layer']
 
                 if layer:  # If the layer name exists
@@ -87,10 +55,12 @@ class Text():
                         if layer == layer_list['layer_name'] and layer_list['show']:
                             mid_depth = (z_from + z_to) / 2   # Calculate mid-point depth
                             text_depth = height + mid_depth
+                            text_easting = easting + float(interval['fromx']) # Desurvey augment
+                            text_northing = northing + float(interval['fromy']) # Desurvey augment
                             Text().add_text(
                                 parent,
-                                easting,
-                                northing,
+                                text_easting,
+                                text_northing,
                                 text_depth,
                                 layer,
                                 ('show_single_layer', layer, site_id, instance)

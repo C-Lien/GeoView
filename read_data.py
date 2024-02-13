@@ -103,7 +103,6 @@ class ReadData():
             return parent.all_data, None
 
         dh_survey_data = defaultdict(list)
-        # dh_survey_data = {}
 
         try:
             with open(file_dir, 'r') as f:

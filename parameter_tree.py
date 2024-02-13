@@ -9,6 +9,7 @@ from toggle import Toggle
 
 class ParameterTree():
 
+    '''
     def p1_tree(parent):
         site_list = []
         for site in parent.all_data:
@@ -21,7 +22,9 @@ class ParameterTree():
         )
         parent.t1.setParameters(p1, showTop=False)
         # return p1
+    '''
 
+    '''
     def p2_tree(parent):
         parent.p2 = Parameter.create(
             name='params',
@@ -29,7 +32,6 @@ class ParameterTree():
             children=[{'name': 'Label Features',
                     'type': 'group',
                     'children': [{'name': 'All labels', 'type': 'bool', 'value': False},
-                                #  {'name': 'Survey Points', 'type': 'bool', 'value': False},
                                     {'name': 'Local labels', 'type': 'bool', 'value': False},
                                     {'name': 'Layer labels', 'type': 'bool', 'value': False},
                                     {'name': 'DH Survey', 'type': 'bool', 'value': False},
@@ -38,9 +40,6 @@ class ParameterTree():
             )
 
         parent.t2.setParameters(parent.p2, showTop=False)
-
-        # parent.p2.child('Label Features', 'Survey Points').sigValueChanged.connect(
-        #     lambda: Toggle.toggle_all_survey_points_display(parent))
 
         parent.p2.child('Label Features','All labels').sigValueChanged.connect(
             lambda: Toggle.toggle_all_names_display(parent))
@@ -55,6 +54,48 @@ class ParameterTree():
             lambda: Toggle.toggle_local_dh_survey_display(parent))
 
         parent.p2.child('Label Features','Triangulation').sigValueChanged.connect(
+            lambda: Toggle.toggle_local_triangulations_all_display(parent))
+
+    '''
+
+    def p2_tree(parent):
+        parent.p2 = Parameter.create(
+            name='params',
+            type='group',
+            children=[]
+        )
+
+        parent.p2.addChild({'name': 'Label Features',
+                            'type': 'str',
+                            'value': '',
+                            'readonly': True})
+
+        features = [
+            {'name': 'All labels', 'type': 'bool', 'value': False},
+            {'name': 'Local labels', 'type': 'bool', 'value': False},
+            {'name': 'Layer labels', 'type': 'bool', 'value': False},
+            {'name': 'DH Survey', 'type': 'bool', 'value': False},
+            {'name': 'Triangulation', 'type': 'bool', 'value': False},
+        ]
+
+        for feature in features:
+            parent.p2.addChild(feature)
+
+        parent.t2.setParameters(parent.p2, showTop=False)
+
+        parent.p2.child('All labels').sigValueChanged.connect(
+            lambda: Toggle.toggle_all_names_display(parent))
+
+        parent.p2.child('Local labels').sigValueChanged.connect(
+            lambda: Toggle.toggle_local_names_display(parent))
+
+        parent.p2.child('Layer labels').sigValueChanged.connect(
+            lambda: Toggle.toggle_local_layer_text_all_display(parent))
+
+        parent.p2.child('DH Survey').sigValueChanged.connect(
+            lambda: Toggle.toggle_local_dh_survey_display(parent))
+
+        parent.p2.child('Triangulation').sigValueChanged.connect(
             lambda: Toggle.toggle_local_triangulations_all_display(parent))
 
     def p3_tree(parent, layer_list):
@@ -76,19 +117,13 @@ class ParameterTree():
 
         parent.tracker_dict['show_single_layer'] = []
 
-        # parent.bool_dict['show_local_names'] = True
-        # parent.p2.child('Label Features', 'Local labels').setValue(True)
-
-        # List comprehension version (Readability > Cleverness!):
-        # layer_list = [detail['layer'] for data in parent.all_data for detail in data['lith_details'] if detail['layer']]
-
         for layer_name in layer_list:
-            # Augment with `ordered_layers` in main() -> for ordered presentation!`
+            # Augment with `ordered_layers` in main() -> for ordered presentation!
             parent.p3.addChild({'name': layer_name, 'type': 'bool', 'value': False})
             layer_dict = {'layer_name':layer_name, 'show':False, 'tracking':[]}
 
             parent.tracker_dict['show_single_layer'].append(layer_dict)
-            parent.p2.child('Label Features', 'Layer labels').setValue(True)
+            parent.p2.child('Layer labels').setValue(True)
             parent.bool_dict['show_single_layer'] = True
 
             parent.p3.child(layer_name).sigValueChanged.connect(

@@ -18,25 +18,32 @@ class SurveyData():
                 else:
                     color = np.full((list_len, 4), [0.0, 0.0, 0.0, 1.0])
             else:
-                color = np.full((list_len, 4), [0.75, 0.04, 0.0, 1.0])
+                color = np.full((list_len, 4), [1.0, 0.0, 0.0, 1.0])
 
             return pos, size, color
-
-        # sub_data = [d for d in all_data if all(d['site_id'] != x['site_id'] for x in local_data)]
 
         local_ids = set(d['site_id'] for d in local_data)
         loc_pos, loc_size, loc_color = create_collar_pos(parent.darkmode, local_data, False)
         loc_pos_data = gl.GLScatterPlotItem(pos=loc_pos, size=loc_size, color=loc_color, pxMode=False)
 
+        if not parent.darkmode: # Allows usage of a 'white' background
+            loc_pos_data.setGLOptions('translucent')
+            ''' See more information here regarding plotting on a white background:
+                https://github.com/pyqtgraph/pyqtgraph/issues/193
+            '''
+
         sub_data = [d for d in parent.all_data if d['site_id'] not in local_ids]
+
         if sub_data:
             pos, size, color = create_collar_pos(parent.darkmode, sub_data, True)
             pos_data = gl.GLScatterPlotItem(pos=pos, size=size, color=color, pxMode=False)
-            if not parent.darkmode:
-                pos_data.setGLOptions('translucent') # Allows usage of a 'white' background
+
+            if not parent.darkmode: # Allows usage of a 'white' background
+                pos_data.setGLOptions('translucent')
                 ''' See more information here regarding plotting on a white background:
                     https://github.com/pyqtgraph/pyqtgraph/issues/193
                 '''
+
             ObjectIO.add_view_items(parent, pos_data, 'show_all_pos')
 
         def calculate_euclidean_center(pos):
@@ -59,7 +66,7 @@ class SurveyData():
             ObjectIO.add_view_items(parent, loc_pos_data, 'show_local_pos')
             parent.bool_dict['show_local_pos'] = True
             parent.bool_dict['show_local_names'] = True
-            parent.p2.child('Label Features', 'Local labels').setValue(True)
+            parent.p2.child('Local labels').setValue(True)
         else:
             euc_center, grid_dims = calculate_euclidean_center(pos)
             Camera.set_camera_position(parent, euc_center)

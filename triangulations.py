@@ -28,23 +28,28 @@ class Triangulations():
                     if parent.darkmode:
                         color = 'lgrey'
                     else:
-                        color = 'black'
+                        color = 'dgrey'
 
                     try:
-                        mesh_item = self.mesh_style(vertices, color, layer, exclusion_holes)
+                        mesh_item = self.mesh_style(parent, vertices, color, layer, exclusion_holes)
                         tracker = 'show_triangulation'
                         ObjectIO.add_view_items(parent, mesh_item, tracker)
 
                     except Exception as e:
-                        print(f"Failed to create GLMeshItem on layer {layer} and point set {key}, Error: {e}")
+                        logging.error(f"Failed to create GLMeshItem on layer {layer} and point set {key}, Error: {e}")
 
     def generate_mesh_data(self, parent):
         points_by_layer = {}
         exclusion_holes = {}
         loop_count = 0
         for data in parent.radius_data:
+
             loop_count = loop_count + 1
-            exclusion_holes[data['site_id']] = {'easting': data['easting'], 'northing': data['northing'], 'height': data['height'], 'layer': []}
+            exclusion_holes[data['site_id']] = {'easting': data['easting'],
+                                                'northing': data['northing'],
+                                                'height': data['height'],
+                                                'layer': []}
+
             list_of_layers = [layer_list for layer_list in parent.tracker_dict['show_single_layer'] if layer_list['show']]
 
             for layer_list in list_of_layers:
@@ -83,24 +88,18 @@ class Triangulations():
                                 depths['MaxX'] = float(depth['depthx'])
                                 depths['MaxY'] = float(depth['depthy'])
 
-                        ''' Legacy to-from depths. To be determined if required
-                            or removed entirely
-                        '''
-                        #from_interval = np.array([data['easting'], data['northing'], data['height'] - float(interval['from'])])
-                        #depth_interval = np.array([data['easting'], data['northing'], data['height'] - float(interval['depth'])])
-
                         from_interval = np.array(
                             [
-                                data['easting'] - depths['MinX'],
-                                data['northing'] - depths['MinY'],
+                                data['easting'] + depths['MinX'],
+                                data['northing'] + depths['MinY'],
                                 data['height'] - depths['MinFrom']
                             ]
                             )
 
                         depth_interval = np.array(
                             [
-                                data['easting'] - depths['MinX'],
-                                data['northing'] - depths['MinY'],
+                                data['easting'] + depths['MinX'],
+                                data['northing'] + depths['MinY'],
                                 data['height'] - depths['MaxDepth']
                             ]
                             )
@@ -133,7 +132,7 @@ class Triangulations():
 
         return tri_simplicies
 
-    def mesh_style(self, vertices, color, layer, exclusion_holes):
+    def mesh_style(self, parent, vertices, color, layer, exclusion_holes):
         colors_dict = {
             'black': (0, 0, 0, 0.8),
             'lgrey': (211/255, 211/255, 211/255, 0.2),
@@ -146,13 +145,14 @@ class Triangulations():
           raise ValueError(f"'{color}' is not a supported color.")
 
         r_color, g_color, b_color, alpha = colors_dict[color]
-        ''' In the below, besides the fact this can clearly be improved upon for
-            speed purposes - we will also add a check for the max(depth) of the
+        ''' Add a check for the max(depth) of the
             target hole where if the `max(depth)` < the relative `from_depth` of
             the triangulated nearest three holes then we will NOT exclude this
             from the triangulation process. This will let us plot 'through' the
             hole - which is most reasonable for when no data exist!
         '''
+
+        ''' SUPERCEEDED BY THE BELOW `REVISED` - Keep until tested
         idx_tracker = []
         for idx, sub_array in enumerate(vertices):
             for row in sub_array:
@@ -162,6 +162,23 @@ class Triangulations():
                         if np.array_equal(row, exclusion):
                             if idx not in idx_tracker:
                                 idx_tracker.append(idx)
+        '''
+        # ========= REVISED ========= #
+        exclusions_set = {
+            (item['easting'], item['northing'], item['height'])
+            for hole, item in exclusion_holes.items()
+            if layer in item['layer']
+        }
+
+        idx_tracker = set()
+
+        for idx, sub_array in enumerate(vertices):
+            for row in map(tuple, sub_array):
+                if row in exclusions_set:
+                    idx_tracker.add(idx)
+
+        idx_tracker = list(idx_tracker)
+        # ========= REVISED ========= #
 
         r_color, g_color, b_color, alpha = colors_dict[color]
         color = np.array([r_color, g_color, b_color, alpha])
@@ -170,10 +187,21 @@ class Triangulations():
         for idx in idx_tracker:
             colors[idx,:,3] = 0
 
+        if not parent.darkmode: # Allows usage of a 'white' background
+            glOptions = 'translucent'
+            ''' See more information here regarding plotting on a white background:
+                https://github.com/pyqtgraph/pyqtgraph/issues/193
+            '''
+        else:
+            glOptions = 'additive'
+
         mesh_item = gl.GLMeshItem(vertexes=vertices,
                                   vertexColors=colors,
-                                  color=(1, 0, 0, 0.2), #Color iteration to be altered with darkmode/lightmode options
-                                  glOptions='additive',
+                                  color=(1, 1, 1, 0.2), #Color iteration to be altered with darkmode/lightmode options
+                                #   glOptions='additive',
+                                #   glOptions='translucent',
+                                #   glOptions='opaque',
+                                  glOptions=glOptions,
                                   smooth=True,
                                   shader='balloon',
                                   drawEdges=False,

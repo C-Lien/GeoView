@@ -7,9 +7,9 @@ Currently supports:
 - Import lithology data CSV
   Headings: [HOLE] [DEPTH_FROM] [DEPTH_TO] [ROCK] [WSECT]
 - View identified working sections (WSECT), label and draw delauney triangulations
+- Minimum Curvature Desurvey - Drill String and Lithology mapping
 
 Planned tasks:
-- Desurvey support
 - Basemap imagery support
 - Cross-section draw
 - Synthetic hole import/ export

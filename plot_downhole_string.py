@@ -23,9 +23,8 @@ class PlotDownholeString():
 
             return pos, size, color
 
-        step_int = 2.0
+        step_int = 2.0 # Magic Number - Step Interval
         data_points = []
-        print(f'Current Desurvey Status on DH plot: {parent.desurvey_status}')
 
         if parent.desurvey_status:
             for data in parent.radius_data:
@@ -47,5 +46,11 @@ class PlotDownholeString():
         pos, size, color = create_dh_pos(parent.darkmode, data_arr)
         pos_data = gl.GLScatterPlotItem(pos=pos, size=size,
                                         color=color, pxMode=False)
+
+        if not parent.darkmode: # Allows usage of a 'white' background
+            pos_data.setGLOptions('translucent')
+            ''' See more information here regarding plotting on a white background:
+                https://github.com/pyqtgraph/pyqtgraph/issues/193
+            '''
 
         ObjectIO.add_view_items(parent, pos_data, 'show_dh_survey')

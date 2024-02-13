@@ -32,9 +32,9 @@ class GuiMenu:
         darkmode_menu = QMenu("Darkmode", parent)
         settings_menu.addMenu(darkmode_menu)
 
-        toggle_darkmode_action = QAction("Toggle Darkmode - WIP", parent)
+        toggle_darkmode_action = QAction("Toggle Darkmode", parent)
         darkmode_menu.addAction(toggle_darkmode_action)
-        # toggle_darkmode_action.triggered.connect(parent.xxx)
+        toggle_darkmode_action.triggered.connect(parent.toggle_darkmode)
 
         return settings_menu
 

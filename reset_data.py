@@ -26,14 +26,14 @@ class ResetData():
                              'Triangulation']
 
         for button in reset_button_list:
-            ResetData.reset_button_state(parent, 'Label Features', button, False)
+            ResetData.reset_button_state(parent, button, False)
 
         for key in parent.bool_dict:
             ObjectIO.clear_view_items(parent, key)
             parent.bool_dict[key] = False
 
-    def reset_button_state(parent, parent_name, child_name, value):
+    def reset_button_state(parent, child_name, value):
         try:
-            parent.p2.child(parent_name, child_name).setValue(value)
+            parent.p2.child(child_name).setValue(value)
         except AttributeError:
             pass

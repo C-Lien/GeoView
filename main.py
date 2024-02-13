@@ -23,8 +23,9 @@ class Main(QMainWindow):
 
     def __init__(self, ):
         super().__init__()
-        self.darkmode = True # Temporary - Add to settings
+        self.darkmode = True
         self.desurvey_status = False # Default no desurvey applied
+        self.all_data = []
 
         ''' ISSUE:      Excessive issue of 'False' where only 'True' required
             ACTION:     Set `bool_dict` and `tracker_dict` as {}. Append in
@@ -102,7 +103,8 @@ class Main(QMainWindow):
         # menu_bar.addMenu("View") # Dummy Menu - WIP
         menu_bar.addMenu(create_desurvey_menu)
 
-        lPanelMenu, self.t1, self.t2, self.t3 = GuiWindow.create_window(self, lPanelMenu, lPanelSize)
+        # lPanelMenu, self.t1, self.t2, self.t3 = GuiWindow.create_window(self, lPanelMenu, lPanelSize)
+        lPanelMenu, self.t2, self.t3 = GuiWindow.create_window(self, lPanelMenu, lPanelSize)
 
         # Add widgets to layout
         self.layout.addWidget(lPanelMenu, 0, 0)
@@ -123,7 +125,7 @@ class Main(QMainWindow):
             self.all_data = all_data
             local_data = []
 
-            ParameterTree.p1_tree(self)
+            # ParameterTree.p1_tree(self)
             ParameterTree.p2_tree(self)
             SurveyData.plot_survey_collars(self, local_data)
 
@@ -165,7 +167,6 @@ class Main(QMainWindow):
         if self.all_desurvey_data:
             logging.info("Utilise existing loaded desurvey_data. Set desurvey_status = True.")
             self.desurvey_status = True
-            print(f"Desurvey status set to {self.desurvey_status}")
 
             # Hard reset of all data
             local_data = []
@@ -199,6 +200,21 @@ class Main(QMainWindow):
                 logging.error(f"An error occured while reseting gpx survey data: {e}")
         else:
             logging.info("No desurvey method applied.")
+
+    def toggle_darkmode(self):
+
+        if self.darkmode:
+            self.view3d.setBackgroundColor('black')
+        else:
+            self.view3d.setBackgroundColor('white')
+
+        if self.all_data:
+            # Hard reset of all data
+            local_data = []
+            ResetData.reset_all_data(self)
+            SurveyData.plot_survey_collars(self, local_data)
+
+        self.darkmode = not self.darkmode
 
 if __name__ == '__main__':
     ''' Consider moving `import` methods to own class.

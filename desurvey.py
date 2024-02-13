@@ -5,11 +5,7 @@ class Desurvey:
 
     def minimum_curvature(self, parent):
 
-        print(f"Triggered minimum curvature desurvey method.")
-        print(f'Current Desurvey Status on DH plot: {parent.desurvey_status}')
-
         parent.desurvey_status = True
-        print(f"Desurvey applied. Desurvey status set to {parent.desurvey_status}")
 
         if not parent.all_desurvey_data:
 
@@ -25,35 +21,32 @@ class Desurvey:
                 inc2_rad = np.radians(inc2)
                 azi2_rad = np.radians(azi2)
 
-                # Calculate ratio factor RF - Simplified!
                 MD = depth2 - depth1
                 dogleg_severity = np.sqrt((inc2_rad - inc1_rad)**2 + (azi2_rad - azi1_rad)**2)
                 RF = 2 / dogleg_severity * np.tan(dogleg_severity / 2)
 
-                # Calculate displacements
                 delta_x = MD / 2 * (np.sin(inc1_rad) * np.sin(azi1_rad) + np.sin(inc2_rad) * np.sin(azi2_rad)) * RF
                 delta_y = MD / 2 * (np.sin(inc1_rad) * np.cos(azi1_rad) + np.sin(inc2_rad) * np.cos(azi2_rad)) * RF
                 delta_z = MD / 2 * (np.cos(inc1_rad) + np.cos(inc2_rad)) * RF
 
                 return delta_x, delta_y, delta_z
 
-            # Process the survey data and compute total displacement for each point
             def process_survey_data(parent, site_id, easting, northing, height, lith_details):
                 desurveyed_points = []
+                desurveyed_lith = []
                 start_bool = False
 
-                # Initialise the starting point at the surface
                 for surveys in parent.dh_survey_data[site_id]:
                     current_position = np.array([easting, northing, height], dtype='float64')
-                    desurvey_data = []
 
                     for i in range(len(parent.dh_survey_data[site_id]) - 1):
                         depth1 = float(parent.dh_survey_data[site_id][i]['depth'])
                         depth2 = float(parent.dh_survey_data[site_id][i+1]['depth'])
 
-                        if float(parent.dh_survey_data[site_id][i]['depth']) > 10: # Magic starting number
-                            ''' "starting depth" for desurvey. Between 10 and 20 works well.
-                            Don't make this too deep otherwise the hole will be out.'''
+                        if float(parent.dh_survey_data[site_id][i]['depth']) > 10: # Magic Number - Starting Depth
+                            ''' "Starting depth" for desurvey. Between 10 and 20 works well.
+                            Don't make this too deep otherwise the hole will be out.
+                            To be moved to a user-accessible location in future.'''
 
                             inc1 = float(parent.dh_survey_data[site_id][i]['inclination'])
                             azi1 = float(parent.dh_survey_data[site_id][i]['azimuth'])
@@ -61,37 +54,88 @@ class Desurvey:
                             inc2 = float(parent.dh_survey_data[site_id][i+1]['inclination'])
                             azi2 = float(parent.dh_survey_data[site_id][i+1]['azimuth'])
 
-                            # Calculate displacement between the current and next survey point
                             dx, dy, dz = calculate_displacement(depth1, inc1, azi1, depth2, inc2, azi2)
 
-                            if start_bool:
-                                self.lithology_curvature(lith_details, depth1, depth2, old_dx, dx, old_dy, dy, old_dz, dz)
-                                # desurvey_data.extend(desurvey_lith)
+                            # ================== START LITHOLOGY ================== #
+                            if start_bool: # DESURVEY LITHOLOGY
+                                for layer in lith_details:
+                                    total_thick = depth2 - depth1
 
-                        else:
-                            # A perfectly straight hole - Keep it as shallow as possible.
+                                    if layer['from'] >= depth1 and layer['from'] < depth2:
+
+                                        # ================== OFFSET ================== #
+                                        percentage_offset = round((layer['from'] - depth1) / total_thick, 2)
+
+                                        new_dx = cum_dx + ((dx - old_dx) * percentage_offset)
+                                        new_dy = cum_dy + ((dy - old_dy) * percentage_offset)
+
+                                        new_dz_from = layer['from'] - ((total_thick - dz) * percentage_offset)
+                                        # ================== END OFFSET ================== #
+
+                                        lith_layer = {
+                                            'layer':layer['layer'],
+                                            'lith':layer['lith'],
+                                            'from':new_dz_from,
+                                            'fromx':new_dx,
+                                            'fromy':new_dy,
+                                            'depth':None,
+                                            'depthx':None,
+                                            'depthy':None,
+                                            }
+
+                                        desurveyed_lith.append(lith_layer)
+                            # ================== END LITHOLOGY ================== #
+
+                        else: # A perfectly straight hole - Keep it as shallow as possible.
                             dz = (depth2 - depth1)
                             dx, dy = 0, 0
 
-                        dz = -dz # inverse for vertical positioning
-                        old_dx, old_dy, old_dz = dx, dy, dz
+                            # ================== START LITHOLOGY ================== #
+                            for layer in lith_details:
+                                if layer['from'] >= depth1 and layer['from'] < depth2:
+                                    lith_layer = {
+                                        'layer':layer['layer'],
+                                        'lith':layer['lith'],
+                                        'from':layer['from'],
+                                        'fromx':layer['fromx'],
+                                        'fromy':layer['fromy'],
+                                        'depth':layer['depth'],
+                                        'depthx':layer['depthx'],
+                                        'depthy':layer['depthy'],
+                                        }
+
+                                    desurveyed_lith.append(lith_layer)
+                            # ================== END LITHOLOGY ================== #
+
+                        # ================== CUM-OFFSET ================== #
+                        if not start_bool:
+                            cum_dx, cum_dy = dx, dy
+
+                        old_dx, old_dy = dx, dy
+
+                        cum_dx = cum_dx + dx
+                        cum_dy = cum_dy + dy
+                        # ================== END CUM-OFFSET ================== #
 
                         start_bool = True
+
+                        dz = -dz # inverse for vertical positioning
 
                         current_position += np.array([dx, dy, dz], dtype='float64')
                         desurveyed_points.append(current_position.copy())
 
-                    return desurveyed_points#, desurvey_data
+                    desurveyed_lith = self.lithology_correction(desurveyed_lith)
+
+                    return desurveyed_points, desurveyed_lith
 
             ####################################################################
             ''' End Desurvey Application'''
             ####################################################################
 
             all_downhole_string = {}
+            all_desurvey_data = []
 
             if parent.desurvey_status:
-
-                all_desurvey_data = []
 
                 for data in parent.all_data:
                     all_downhole_string[data['site_id']] = []
@@ -101,67 +145,56 @@ class Desurvey:
                     height = data['height']
                     lith_details = data['lith_details']
 
-                    all_desurvey_data = {'site_id':site_id,
+                    all_desurvey_dict = {'site_id':site_id,
                                         'easting':easting,
                                         'northing':northing,
                                         'height':height,
                                         'lith_details':[]}
 
-                    point = process_survey_data(parent, site_id, easting, northing, height, lith_details)
+                    if site_id in parent.dh_survey_data:
+                        point, desurveyed_lith = process_survey_data(parent, site_id, easting, northing, height, lith_details)
+                    else:
+                        points = []
+                        step_int = 2.0 # Magic Number - Step Interval
+                        max_depth = min(-float(interval['depth']) for interval in data['lith_details'])
+
+                        for z in np.arange(0, max_depth*(-1), step_int):
+                            pos = [easting, northing, height - z]
+                            points.append(pos)
+
+                        point = [np.array(pos) for pos in points]
+
+                        desurveyed_lith = lith_details
 
                     if point is not None:
                         all_downhole_string[site_id].extend(point)
-                        # all_desurvey_data['lith_details'] = desurvey_lith
 
-                    # all_desurvey_data.append(desurvey_data)
-
-            all_desurvey_data = parent.all_data #TODO - This is being achieved above!
+                    if desurveyed_lith is not None:
+                        all_desurvey_dict['lith_details'] = desurveyed_lith
+                        all_desurvey_data.append(all_desurvey_dict)
 
             return all_downhole_string, all_desurvey_data
 
         else:
             return parent.all_downhole_string, parent.all_desurvey_data
 
-    def lithology_curvature(self, lith_details, depth1, depth2, old_dx, dx, old_dy, dy, old_dz, dz):
-        for layer in lith_details:
-            total_thick = depth2 - depth1
-            # print(f"From: {depth1} To: {depth2} with a thickness of {total_thick}, we print layer {layer}")
-            if layer['from'] >= depth1 and layer['from'] <= depth2:
-                print(f"From: {depth1} To: {depth2} with a thickness of {total_thick}, we print layer {layer}")
-                percentage_offset = round((layer['from'] - depth1) / total_thick,2)
-                print(f"Our percentage offset is: {percentage_offset}")
+    def lithology_correction(self, desurveyed_lith):
 
-                new_dx = old_dx + ((dx - old_dx) * percentage_offset)
-                new_dy = old_dy + ((dy - old_dy) * percentage_offset)
-                new_dz_from = old_dz + ((dz - old_dz) * percentage_offset)
-                new_dz_depth = new_dx + ((layer['depthx'] - layer['fromx']) * 0.5)
+        sorted_desurveyed_lith = sorted(desurveyed_lith, key=lambda x: x['from'])
 
-                ''' I am up to here: the formula for new_dx, dy etc are incorrect! Dunno how though.
-                But otherwise everything works as intended.....
-                Once we sort out this darn equation we can start appending these to our all_desurvey_data
-                Parse this out to plot and happy days! =)
-                '''
-                desurvey_lith = {
-                    'layer':layer['layer'],
-                    'lith':layer['lith'],
-                    'from':new_dz_from,
-                    'fromx':new_dx,
-                    'fromy':new_dy,
-                    'depth':new_dz_depth,
-                    'depthx':new_dx,
-                    'depthy':new_dy
-                }
+        for i in range(len(sorted_desurveyed_lith) - 1):
+            sorted_desurveyed_lith[i]['depth'] = sorted_desurveyed_lith[i + 1]['from']
+            sorted_desurveyed_lith[i]['depthx'] = sorted_desurveyed_lith[i + 1]['fromx']
+            sorted_desurveyed_lith[i]['depthy'] = sorted_desurveyed_lith[i + 1]['fromy']
 
-                print(f"From: {depth1} To: {depth2} with a thickness of {total_thick}, we print layer {desurvey_lith}")
+        last_item = sorted_desurveyed_lith[-1]
+        last_item['depth'] = last_item['from'] + 0.01
+        last_item['depthx'] = last_item['fromx']
+        last_item['depthy'] = last_item['fromy']
 
-                # print(layer)
-                # desurvey_lith = layer
-                # print(desurvey_lith)
-
-        # return desurvey_lith
+        return sorted_desurveyed_lith
 
     def reset_desurvey(parent):
         desurvey_status = False
-        print(f"Desurvey status set to {desurvey_status}")
 
         return desurvey_status
