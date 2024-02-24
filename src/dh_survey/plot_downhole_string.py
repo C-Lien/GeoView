@@ -32,14 +32,22 @@ class PlotDownholeString():
 
         else:
             for data in parent.radius_data:
-                easting = data['easting']
-                northing = data['northing']
-                height = data['height']
-                max_depth = min(-float(interval['depth']) for interval in data['lith_details'])
+                if data['lith_details']:
+                    try:
+                        easting = data['easting']
+                        northing = data['northing']
+                        height = data['height']
+                        max_depth = min(-float(interval['depth']) for interval in data['lith_details'])
 
-                for z in np.arange(0, max_depth*(-1), step_int):
-                    point = [easting, northing, height - z]
-                    data_points.append(point)
+                        for z in np.arange(0, max_depth*(-1), step_int):
+                            point = [easting, northing, height - z]
+                            data_points.append(point)
+
+                    except AttributeError as e:
+                        logging.error(f"Error encounted for {data['site_id']} when generating downhole string: {e}")
+
+                if not data['lith_details']:
+                    logging.info(f"No lithology data loaded for {data['site_id']}.")
 
         data_arr = np.array(data_points)
 

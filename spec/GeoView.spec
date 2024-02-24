@@ -13,7 +13,8 @@ a = Analysis(
 		('..\\src\\scene_control\\*', 'scene_control'),
 		('..\\src\\text\\*', 'text'),
 		('..\\src\\triangulation\\*', 'triangulation'),
-		('..\\icon\\GeoView.ico', 'icon')
+		('..\\icon\\GeoView.ico', 'icon'),
+		('..\\README.md', '.'),
 		],
     hiddenimports=[],
     hookspath=[],
@@ -24,13 +25,22 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)
 
+splash = Splash('..\\splash\\GeoSplash.png',
+                binaries=a.binaries,
+                datas=a.datas,
+                text_pos=None,
+                text_size=12,
+                text_color='black')
+
 exe = EXE(
     pyz,
     a.scripts,
+	splash,
+	splash.binaries,
     a.binaries,
     a.datas,
     [],
-    name='GeoView',
+    name='GeoView v0.0.3',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

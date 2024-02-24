@@ -68,10 +68,16 @@ class SetHoleData():
             if easting is not None and northing is not None:
 
                 for item in data:
-                    # TODO: Apply pythag for radius over a `square`
-                    if abs(easting - item['easting']) < select_radius and \
-                        abs(northing - item['northing']) < select_radius:
 
+                    # if abs(easting - item['easting']) < select_radius and \
+                    #     abs(northing - item['northing']) < select_radius:
+
+                    #     radius_data.append(item)
+
+                    distance = ((easting - item['easting'])**2 +
+                                (northing - item['northing'])**2)**0.5
+
+                    if distance < select_radius:
                         radius_data.append(item)
 
                         for lith_detail in item['lith_details']:

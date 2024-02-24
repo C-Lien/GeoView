@@ -37,14 +37,14 @@ class ReadData():
             for row in file_data:
                 try:
                     site_dict = {
-                        'site_id': row['HOLE'],
+                        'site_id': row['HOLE'].upper(),
                         'easting': float(row['EASTING']),
                         'northing': float(row['NORTHING']),
                         'height': float(row['RL']),
                         'lith_details': []
                     }
                 except Exception as e:
-                    logging.error(f"An error occurred while parsing survey data: {e}")
+                    logging.error(f"An error occurred for {row['HOLE']} while parsing survey data: {e}")
                     continue
                 site_data.append(site_dict)
 
@@ -66,8 +66,9 @@ class ReadData():
                 for row in file_data:
                     try:
                         lith_dict = {
-                            'layer': row['WSECT'],
-                            'lith': row['ROCK'],
+                            # Standardise strings to uppercase for parsing
+                            'layer': row['WSECT'].upper(),
+                            'lith': row['ROCK'].upper(),
                             'from': float(row['DEPTH_FROM']),
                             'fromx': 0,
                             'fromy': 0,
@@ -75,16 +76,17 @@ class ReadData():
                             'depthx': 0,
                             'depthy': 0
                         }
-                        lith_mapping[row['HOLE']].append(lith_dict)
+                        lith_mapping[row['HOLE'].upper()].append(lith_dict)
 
-                        layer_depths[row['WSECT']].append(float(row['DEPTH_FROM'])) #
+                        layer_depths[row['WSECT'].upper()].append(float(row['DEPTH_FROM']))
 
                     except ValueError as e:
-                        logging.error(f"An error occurred while parsing lithological data: {e}")
+                        logging.error(f"An error occurred for {row['HOLE']} while parsing lithological data: {e}")
                         continue
 
-            min_depths = { layer: min(depths) for layer, depths in layer_depths.items() }
-            ordered_layers = sorted(min_depths, key=min_depths.get)
+            layer_depths = { layer: depths for layer, depths in layer_depths.items() if layer }
+            average_depths = { layer: sum(depths) / len(depths) for layer, depths in layer_depths.items()}
+            ordered_layers = sorted(average_depths, key=average_depths.get)
 
             for site in parent.all_data:
                 if site['site_id'] in lith_mapping:
@@ -110,15 +112,15 @@ class ReadData():
                 for row in file_data:
                     try:
                         dh_survey_dict = {
-                            'depth': row['DEPTH'],
-                            'azimuth': row['AZI'],
+                            'depth': float(row['DEPTH']),
+                            'azimuth': float(row['AZI']),
                             'inclination': float(row['TILT']),
                             'dip': float(row['DIP']),
                         }
-                        dh_survey_data[row['HOLE']].append(dh_survey_dict)
+                        dh_survey_data[row['HOLE'].upper()].append(dh_survey_dict)
 
                     except ValueError as e:
-                        logging.error(f"An error occurred while parsing gpx survey data: {e}")
+                        logging.error(f"An error occurred for {row['HOLE']} at depth {row['DEPTH']} while parsing gpx survey data: {e}")
                         continue
 
         except Exception as e:

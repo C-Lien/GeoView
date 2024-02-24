@@ -117,8 +117,9 @@ class ParameterTree():
 
         parent.tracker_dict['show_single_layer'] = []
 
-        for layer_name in layer_list:
-            # Augment with `ordered_layers` in main() -> for ordered presentation!
+        ordered_layer_list = [layer for layer in parent.ordered_layers if layer in layer_list]
+
+        for layer_name in ordered_layer_list:
             parent.p3.addChild({'name': layer_name, 'type': 'bool', 'value': False})
             layer_dict = {'layer_name':layer_name, 'show':False, 'tracking':[]}
 

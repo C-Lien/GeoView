@@ -1,5 +1,7 @@
 import logging
 import os, sys
+import tkinter as tk
+from tkinter import messagebox
 
 # PyQt5 libraries
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QDesktopWidget)
@@ -20,10 +22,16 @@ from src.collar_survey.survey_data import SurveyData
 from src.scene_control.reset_data import ResetData
 from src.dh_survey.desurvey import Desurvey
 
+# define is_frozen status for splash control
+is_frozen = getattr(sys, 'frozen', False)
 
 class Main(QMainWindow):
 
     def __init__(self, ):
+        if is_frozen: # Close splash screen on application start
+            import pyi_splash # This is importing via PyInstaller
+            pyi_splash.close()
+
         super().__init__()
         self.darkmode = True
         self.desurvey_status = False # Default no desurvey applied
@@ -68,21 +76,27 @@ class Main(QMainWindow):
                 int(screen_resolution.height() * percentage))
 
         self.resize(*wsize)
-        self.setWindowTitle('GeoView')
+        self.setWindowTitle('GeoView v0.0.3')
 
         # ================ SET ICON ================ #
-        def resource_path(relative_path):
-            """Convert relative path to absolute path."""
-            # This grabs the directory where main.py lives
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-
-            # Navigate back up to the root (GeoView), then down to the icon
-            base_path = os.path.join(current_dir, '..', '..', 'icon')
-
-            return os.path.join(base_path, relative_path)
-
         icon_name = "GeoView.ico"
-        icon_dir = resource_path(icon_name)
+
+        if is_frozen:
+            def resource_path(relative_path):
+                base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+                return os.path.join(base_path, relative_path)
+
+            icon_dir = resource_path("icon/" + icon_name)
+
+
+        else:
+            def resource_path(relative_path):
+                temp_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+                base_path = os.path.join(temp_path, '..', '..', 'icon')
+                return os.path.join(base_path, relative_path)
+
+            icon_dir = resource_path(icon_name)
+
         self.setWindowIcon(QIcon(icon_dir))
         # ================ SET ICON ================ #
 
@@ -194,12 +208,13 @@ class Main(QMainWindow):
             return
 
         try:
-            self.all_downhole_string, self.all_desurvey_data = Desurvey().minimum_curvature(self)
+            if self.all_data and self.ordered_layers:
+                self.all_downhole_string, self.all_desurvey_data = Desurvey().minimum_curvature(self)
 
-            # Hard reset of all data
-            local_data = []
-            ResetData.reset_all_data(self)
-            SurveyData.plot_survey_collars(self, local_data)
+                # Hard reset of all data
+                local_data = []
+                ResetData.reset_all_data(self)
+                SurveyData.plot_survey_collars(self, local_data)
 
         except Exception as e:
             logging.error(f"An error occured while applying gpx survey data: {e}")
@@ -255,17 +270,23 @@ class Main(QMainWindow):
 
         self.darkmode = not self.darkmode
 
+
+# ================ MAIN FUNCTION ================ #
+# TODO - Set this as Main() elsewhere...
+
+'''
 import tkinter as tk
 from tkinter import messagebox
+'''
 
+'''
 def show_info_popup():
     root = tk.Tk()
     root.withdraw()
 
-    title = "GeoView v0.0.2"
+    title = "GeoView v0.0.3"
     message = (
-        "Author: Christopher Lien\n"
-        "Contact: +61 400 411 598\n\n"
+        "Author: Christopher Lien\n\n"
         "This program is free software. It comes without any warranty, to "
         "the extent permitted by applicable law. You can redistribute it "
         "and / or modify it under the terms of the WTFPL, Version 2. "
@@ -275,10 +296,91 @@ def show_info_popup():
     messagebox.showinfo(title, message)
 
     root.destroy()
+'''
+
+# ============================================================================ #
+# This was set up as the splash screen on load. Superceeded by PyInstaller
+# splash screen `pyi_splash`.
+# ============================================================================ #
+
+'''
+import os, sys
+import tkinter as tk
+from tkinter import Toplevel, Label, PhotoImage, Button
+
+def show_splash_screen(splash_dir):
+    root = tk.Tk()
+    root.withdraw()
+
+    splash = Toplevel(root)
+    splash.title("GeoView v0.0.3")
+    splash.overrideredirect(True)
+
+    splash_image = PhotoImage(file=splash_dir)
+    image_label = Label(splash, image=splash_image)
+    image_label.pack()
+
+    # message = (
+    #     "Author: Christopher Lien\n\n"
+    #     "This program is free software. It comes without any warranty, to "
+    #     "the extent permitted by applicable law. You can redistribute it "
+    #     "and/or modify it under the terms of the WTFPL, Version 2. "
+    #     "\nSee http://sam.zoy.org/wtfpl/COPYING for more details."
+    # )
+    # Label(splash, text=message, justify="left").pack()
+
+    def dismiss_splash():
+        splash.destroy()
+        root.quit()
+
+    okay_button = Button(splash, text="Accept", command=dismiss_splash,
+                         font=("Helvetica", 14), padx=15, pady=5)
+
+    button_x = (splash_image.width() // 2) + (splash_image.width() // 4)
+    button_y = (splash_image.height() // 1.25)
+
+    okay_button.place(x=button_x, y=button_y)
+
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    splash_width = splash_image.width()
+    splash_height = splash_image.height()
+
+    x_coordinate = (screen_width - splash_width) // 2
+    y_coordinate = (screen_height - splash_height) // 2
+
+    splash.geometry(f'{splash_width}x{splash_height}+{x_coordinate}+{y_coordinate}')
+
+    root.mainloop()
+
+def resource_path(relative_path):
+    """ Convert relative path to absolute path.
+    """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    base_path = os.path.join(current_dir, '..', '..', 'splash')
+
+    return os.path.join(base_path, relative_path)
+
+splash_name = "GeoSplash.png"
+splash_dir = resource_path(splash_name)
+
+# def resource_path(relative_path):
+#     """ Get absolute path to resource, works for dev and for PyInstaller
+#     """
+#     temp_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+#     base_path = os.path.join(temp_path, '..', '..', 'splash')
+#     return os.path.join(base_path, relative_path)
+
+# splash_dir = resource_path('GeoSplash.png')
+
+show_splash_screen(splash_dir)
+'''
 
 if __name__ == '__main__':
-    show_info_popup()
-
     app = QApplication([])
     window = Main()
+    app.setStyle("Windows") # The superior style scheme!
     app.exec_()
+
+# ================ MAIN FUNCTION ================ #

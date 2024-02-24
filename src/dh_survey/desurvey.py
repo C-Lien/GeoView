@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 
 
@@ -22,12 +23,22 @@ class Desurvey:
                 azi2_rad = np.radians(azi2)
 
                 MD = depth2 - depth1
-                dogleg_severity = np.sqrt((inc2_rad - inc1_rad)**2 + (azi2_rad - azi1_rad)**2)
-                RF = 2 / dogleg_severity * np.tan(dogleg_severity / 2)
+                try:
+                    dogleg_severity = np.sqrt((inc2_rad - inc1_rad)**2 + (azi2_rad - azi1_rad)**2)
+
+                    if dogleg_severity == 0:
+                        RF = 1
+                    else:
+                        RF = 2 / dogleg_severity * np.tan(dogleg_severity / 2)
+                        if np.isnan(RF) or np.isinf(RF):
+                            RF = 1
+
+                except ZeroDivisionError:
+                    RF = 1
 
                 delta_x = MD / 2 * (np.sin(inc1_rad) * np.sin(azi1_rad) + np.sin(inc2_rad) * np.sin(azi2_rad)) * RF
                 delta_y = MD / 2 * (np.sin(inc1_rad) * np.cos(azi1_rad) + np.sin(inc2_rad) * np.cos(azi2_rad)) * RF
-                delta_z = MD / 2 * (np.cos(inc1_rad) + np.cos(inc2_rad)) * RF
+                delta_z = MD / 2 * (np.cos(inc1_rad) + np.cos(inc2_rad)) # * RF TODO DogLeg Severity
 
                 return delta_x, delta_y, delta_z
 
@@ -41,88 +52,91 @@ class Desurvey:
 
                     for i in range(len(parent.dh_survey_data[site_id]) - 1):
                         depth1 = float(parent.dh_survey_data[site_id][i]['depth'])
-                        depth2 = float(parent.dh_survey_data[site_id][i+1]['depth'])
 
-                        if float(parent.dh_survey_data[site_id][i]['depth']) > 10: # Magic Number - Starting Depth
-                            ''' "Starting depth" for desurvey. Between 10 and 20 works well.
-                            Don't make this too deep otherwise the hole will be out.
-                            To be moved to a user-accessible location in future.'''
+                        if depth1 > 0:
+                            depth2 = float(parent.dh_survey_data[site_id][i+1]['depth'])
 
-                            inc1 = float(parent.dh_survey_data[site_id][i]['inclination'])
-                            azi1 = float(parent.dh_survey_data[site_id][i]['azimuth'])
+                            if float(parent.dh_survey_data[site_id][i]['depth']) > 0: # Magic Number - Starting Depth
+                                ''' "Starting depth" for desurvey. Between 10 and 20 works well.
+                                Don't make this too deep otherwise the hole will be out.
+                                To be moved to a user-accessible location in future.'''
 
-                            inc2 = float(parent.dh_survey_data[site_id][i+1]['inclination'])
-                            azi2 = float(parent.dh_survey_data[site_id][i+1]['azimuth'])
+                                inc1 = float(parent.dh_survey_data[site_id][i]['inclination'])
+                                azi1 = float(parent.dh_survey_data[site_id][i]['azimuth'])
 
-                            dx, dy, dz = calculate_displacement(depth1, inc1, azi1, depth2, inc2, azi2)
+                                inc2 = float(parent.dh_survey_data[site_id][i+1]['inclination'])
+                                azi2 = float(parent.dh_survey_data[site_id][i+1]['azimuth'])
 
-                            # ================== START LITHOLOGY ================== #
-                            if start_bool: # DESURVEY LITHOLOGY
-                                for layer in lith_details:
-                                    total_thick = depth2 - depth1
+                                dx, dy, dz = calculate_displacement(depth1, inc1, azi1, depth2, inc2, azi2)
 
-                                    if layer['from'] >= depth1 and layer['from'] < depth2:
+                                # ================== START LITHOLOGY ================== #
+                                if start_bool and lith_details: # DESURVEY LITHOLOGY
+                                    for layer in lith_details:
+                                        total_thick = depth2 - depth1
 
-                                        # ================== OFFSET ================== #
-                                        percentage_offset = round((layer['from'] - depth1) / total_thick, 2)
+                                        if layer['from'] >= depth1 and layer['from'] < depth2:
 
-                                        new_dx = cum_dx + ((dx - old_dx) * percentage_offset)
-                                        new_dy = cum_dy + ((dy - old_dy) * percentage_offset)
+                                            # ================== OFFSET ================== #
+                                            percentage_offset = round((layer['from'] - depth1) / total_thick, 2)
 
-                                        new_dz_from = layer['from'] - ((total_thick - dz) * percentage_offset)
-                                        # ================== END OFFSET ================== #
+                                            new_dx = cum_dx + ((dx - old_dx) * percentage_offset)
+                                            new_dy = cum_dy + ((dy - old_dy) * percentage_offset)
 
-                                        lith_layer = {
-                                            'layer':layer['layer'],
-                                            'lith':layer['lith'],
-                                            'from':new_dz_from,
-                                            'fromx':new_dx,
-                                            'fromy':new_dy,
-                                            'depth':None,
-                                            'depthx':None,
-                                            'depthy':None,
-                                            }
+                                            new_dz_from = layer['from'] - ((total_thick - dz) * percentage_offset)
+                                            # ================== END OFFSET ================== #
 
-                                        desurveyed_lith.append(lith_layer)
-                            # ================== END LITHOLOGY ================== #
+                                            lith_layer = {
+                                                'layer':layer['layer'],
+                                                'lith':layer['lith'],
+                                                'from':new_dz_from,
+                                                'fromx':new_dx,
+                                                'fromy':new_dy,
+                                                'depth':None,
+                                                'depthx':None,
+                                                'depthy':None,
+                                                }
 
-                        else: # A perfectly straight hole - Keep it as shallow as possible.
-                            dz = (depth2 - depth1)
-                            dx, dy = 0, 0
+                                            desurveyed_lith.append(lith_layer)
+                                # ================== END LITHOLOGY ================== #
 
-                            # ================== START LITHOLOGY ================== #
-                            for layer in lith_details:
-                                if layer['from'] >= depth1 and layer['from'] < depth2:
-                                    lith_layer = {
-                                        'layer':layer['layer'],
-                                        'lith':layer['lith'],
-                                        'from':layer['from'],
-                                        'fromx':layer['fromx'],
-                                        'fromy':layer['fromy'],
-                                        'depth':layer['depth'],
-                                        'depthx':layer['depthx'],
-                                        'depthy':layer['depthy'],
-                                        }
+                            else: # A perfectly straight hole - Keep it as shallow as possible.
+                                dz = (depth2 - depth1)
+                                dx, dy = 0, 0
 
-                                    desurveyed_lith.append(lith_layer)
-                            # ================== END LITHOLOGY ================== #
+                                # ================== START LITHOLOGY ================== #
+                                if lith_details:
+                                    for layer in lith_details:
+                                        if layer['from'] >= depth1 and layer['from'] < depth2:
+                                            lith_layer = {
+                                                'layer':layer['layer'],
+                                                'lith':layer['lith'],
+                                                'from':layer['from'],
+                                                'fromx':layer['fromx'],
+                                                'fromy':layer['fromy'],
+                                                'depth':layer['depth'],
+                                                'depthx':layer['depthx'],
+                                                'depthy':layer['depthy'],
+                                                }
 
-                        # ================== CUM-OFFSET ================== #
-                        if not start_bool:
-                            cum_dx, cum_dy = dx, dy
+                                            desurveyed_lith.append(lith_layer)
+                                # ================== END LITHOLOGY ================== #
 
-                        old_dx, old_dy = dx, dy
+                            # ================== CUM-OFFSET ================== #
+                            if not start_bool:
+                                cum_dx, cum_dy = dx, dy
 
-                        cum_dx = cum_dx + dx
-                        cum_dy = cum_dy + dy
-                        # ================== END CUM-OFFSET ================== #
+                            old_dx, old_dy = dx, dy
 
-                        start_bool = True
+                            cum_dx = cum_dx + dx
+                            cum_dy = cum_dy + dy
+                            # ================== END CUM-OFFSET ================== #
 
-                        dz = -dz # inverse for vertical positioning
+                            start_bool = True
 
-                        current_position += np.array([dx, dy, dz], dtype='float64')
-                        desurveyed_points.append(current_position.copy())
+                            dz = -dz # inverse for vertical positioning
+
+                            current_position += np.array([dx, dy, dz], dtype='float64')
+                            desurveyed_points.append(current_position.copy())
 
                     desurveyed_lith = self.lithology_correction(desurveyed_lith)
 
@@ -152,19 +166,25 @@ class Desurvey:
                                         'lith_details':[]}
 
                     if site_id in parent.dh_survey_data:
-                        point, desurveyed_lith = process_survey_data(parent, site_id, easting, northing, height, lith_details)
+                        try:
+                            point, desurveyed_lith = process_survey_data(parent, site_id, easting, northing, height, lith_details)
+
+                        except Exception as e:
+                            logging.error(f"An error occured for {site_id} while running desurvey: {e}")
+
                     else:
-                        points = []
-                        step_int = 2.0 # Magic Number - Step Interval
-                        max_depth = min(-float(interval['depth']) for interval in data['lith_details'])
+                        if data['lith_details']:
+                            points = []
+                            step_int = 2.0 # Magic Number - Step Interval
+                            max_depth = min(-float(interval['depth']) for interval in data['lith_details'])
 
-                        for z in np.arange(0, max_depth*(-1), step_int):
-                            pos = [easting, northing, height - z]
-                            points.append(pos)
+                            for z in np.arange(0, max_depth*(-1), step_int):
+                                pos = [easting, northing, height - z]
+                                points.append(pos)
 
-                        point = [np.array(pos) for pos in points]
+                            point = [np.array(pos) for pos in points]
 
-                        desurveyed_lith = lith_details
+                            desurveyed_lith = lith_details
 
                     if point is not None:
                         all_downhole_string[site_id].extend(point)
