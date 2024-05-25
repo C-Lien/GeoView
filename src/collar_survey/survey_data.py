@@ -18,7 +18,7 @@ class SurveyData():
                 else:
                     color = np.full((list_len, 4), [0.0, 0.0, 0.0, 1.0])
             else:
-                color = np.full((list_len, 4), [1.0, 0.0, 0.0, 1.0])
+                color = np.full((list_len, 4), [1.0, 1.0, 1.0, 1.0])
 
             return pos, size, color
 
@@ -66,7 +66,7 @@ class SurveyData():
             ObjectIO.add_view_items(parent, loc_pos_data, 'show_local_pos')
             parent.bool_dict['show_local_pos'] = True
             parent.bool_dict['show_local_names'] = True
-            parent.p2.child('Local labels').setValue(True)
+            parent.p2.child('Display Collars').setValue(True)
         else:
             euc_center, grid_dims = calculate_euclidean_center(pos)
             Camera.set_camera_position(parent, euc_center)

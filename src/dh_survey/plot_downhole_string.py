@@ -27,7 +27,8 @@ class PlotDownholeString():
         data_points = []
 
         if parent.desurvey_status:
-            for data in parent.radius_data:
+            #for data in parent.radius_data:
+            for data in parent.all_data:
                 data_points.extend(parent.all_downhole_string[data['site_id']])
 
         else:

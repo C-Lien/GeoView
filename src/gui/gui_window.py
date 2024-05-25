@@ -37,8 +37,8 @@ class GuiWindow:
         intRadiusBox = QLineEdit()
         intRadiusBox.setValidator(QIntValidator())
 
-        intRadiusButton = QPushButton("Set Radius (meters)")
-        intRadiusButton.clicked.connect(lambda: SetHoleData.set_radius_value(parent, intRadiusBox.text()))
+        # intRadiusButton = QPushButton("Set Radius (meters)")
+        # intRadiusButton.clicked.connect(lambda: SetHoleData.set_radius_value(parent, intRadiusBox.text()))
 
         strHoleidBox = QLineEdit()
 
@@ -57,9 +57,9 @@ class GuiWindow:
         hBoxLayout1.addWidget(strHoleidButton)
 
         hBoxLayout2 = QHBoxLayout()
-        hBoxLayout2.addWidget(QLabel("Radius (meters):"))
-        hBoxLayout2.addWidget(intRadiusBox)
-        hBoxLayout2.addWidget(intRadiusButton)
+        # hBoxLayout2.addWidget(QLabel("Radius (meters):"))
+        # hBoxLayout2.addWidget(intRadiusBox)
+        # hBoxLayout2.addWidget(intRadiusButton)
 
         lPanelLayout.addLayout(hBoxLayout1)
         lPanelLayout.addLayout(hBoxLayout2)

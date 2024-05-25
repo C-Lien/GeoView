@@ -71,10 +71,10 @@ class ParameterTree():
                             'readonly': True})
 
         features = [
-            {'name': 'All labels', 'type': 'bool', 'value': False},
-            {'name': 'Local labels', 'type': 'bool', 'value': False},
-            {'name': 'Layer labels', 'type': 'bool', 'value': False},
-            {'name': 'DH Survey', 'type': 'bool', 'value': False},
+            #{'name': 'Display Collars', 'type': 'bool', 'value': False},
+            {'name': 'Display Collars', 'type': 'bool', 'value': False},
+            {'name': 'Layers', 'type': 'bool', 'value': False},
+            {'name': 'Drill String', 'type': 'bool', 'value': False},
             {'name': 'Triangulation', 'type': 'bool', 'value': False},
         ]
 
@@ -83,16 +83,16 @@ class ParameterTree():
 
         parent.t2.setParameters(parent.p2, showTop=False)
 
-        parent.p2.child('All labels').sigValueChanged.connect(
-            lambda: Toggle.toggle_all_names_display(parent))
+        # parent.p2.child('Display Collars').sigValueChanged.connect(
+        #     lambda: Toggle.toggle_all_names_display(parent))
 
-        parent.p2.child('Local labels').sigValueChanged.connect(
+        parent.p2.child('Display Collars').sigValueChanged.connect(
             lambda: Toggle.toggle_local_names_display(parent))
 
-        parent.p2.child('Layer labels').sigValueChanged.connect(
+        parent.p2.child('Layers').sigValueChanged.connect(
             lambda: Toggle.toggle_local_layer_text_all_display(parent))
 
-        parent.p2.child('DH Survey').sigValueChanged.connect(
+        parent.p2.child('Drill String').sigValueChanged.connect(
             lambda: Toggle.toggle_local_dh_survey_display(parent))
 
         parent.p2.child('Triangulation').sigValueChanged.connect(
@@ -124,7 +124,7 @@ class ParameterTree():
             layer_dict = {'layer_name':layer_name, 'show':False, 'tracking':[]}
 
             parent.tracker_dict['show_single_layer'].append(layer_dict)
-            parent.p2.child('Layer labels').setValue(True)
+            parent.p2.child('Layers').setValue(True)
             parent.bool_dict['show_single_layer'] = True
 
             parent.p3.child(layer_name).sigValueChanged.connect(

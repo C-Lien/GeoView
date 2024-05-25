@@ -38,29 +38,6 @@ class GuiMenu:
 
         return settings_menu
 
-    '''
-    @staticmethod # Currently dummy data - WIP
-    def create_view_menu(parent):
-        view_direction_menu = QMenu("View Direction - WIP", parent)
-
-        set_north_view_action = QAction("North", parent)
-        view_direction_menu.addAction(set_north_view_action)
-
-        set_south_view_action = QAction("South", parent)
-        view_direction_menu.addAction(set_south_view_action)
-
-        set_east_view_action = QAction("East", parent)
-        view_direction_menu.addAction(set_east_view_action)
-
-        set_west_view_action = QAction("West", parent)
-        view_direction_menu.addAction(set_west_view_action)
-
-        set_plan_view_action = QAction("Plan View", parent)
-        view_direction_menu.addAction(set_plan_view_action)
-
-        return view_direction_menu
-    '''
-
     @staticmethod
     def create_desurvey_menu(parent):
         desurvey_menu = QMenu("Desurvey", parent)
@@ -78,6 +55,19 @@ class GuiMenu:
 
         return desurvey_menu
 
+    @staticmethod
+    def create_about_menu(parent):
+        about_menu = QMenu("About", parent)
+
+        about_author = QAction("... the Author", parent)
+        about_menu.addAction(about_author)
+        about_author.triggered.connect(parent.show_about_author)
+
+        about_program = QAction("... the Program", parent)
+        about_menu.addAction(about_program)
+        about_program.triggered.connect(parent.show_about_program)
+
+        return about_menu
 
 
 

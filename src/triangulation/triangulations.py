@@ -45,7 +45,8 @@ class Triangulations():
 
         points_by_layer = {}
         exclusion_holes = {}
-        for data in parent.radius_data:
+        #for data in parent.radius_data:
+        for data in parent.all_data:
             if data['lith_details']:
                 exclusion_holes[data['site_id']] = {'easting': data['easting'],
                                                     'northing': data['northing'],
@@ -127,7 +128,8 @@ class Triangulations():
                                 return ((x2 - x1)**2 + (y2 - y1)**2)**0.5
 
                             distances = []
-                            for other_data in parent.radius_data:
+                            #for other_data in parent.radius_data:
+                            for other_data in parent.all_data:
                                 if other_data['site_id'] != data['site_id']:
                                     for interval in other_data['lith_details']:
                                         if interval['layer'] == layer_list['layer_name']:

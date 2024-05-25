@@ -19,10 +19,10 @@ class ResetData():
     #     ObjectIO.clear_view_items(parent, 'show_dh_survey')
 
     def reset_all_data(parent):
-        reset_button_list = ['All labels',
-                             'Local labels',
-                             'Layer labels',
-                             'DH Survey',
+        reset_button_list = [#'Display Collars',
+                             'Display Collars',
+                             'Layers',
+                             'Drill String',
                              'Triangulation']
 
         for button in reset_button_list:

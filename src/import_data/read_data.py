@@ -1,4 +1,6 @@
 import logging
+import os
+import sys
 
 # Native libraries
 from tkinter import filedialog
@@ -7,6 +9,7 @@ from csv import DictReader
 
 class ReadData():
 
+    '''
     def get_file_location(self):
         file_dir = filedialog.askopenfilename(initialdir="/",
                                             title="Select file",
@@ -14,18 +17,24 @@ class ReadData():
                                                         ("all files", "*.*")))
 
         return file_dir
+    '''
+
+    def get_file_location(self, file_type):
+        file_dir = os.path.dirname(sys.executable)
+
+        if file_type == "survey":
+            file_name = "1_survey.csv"
+        if file_type == "lithology":
+            file_name = "2_lithology.csv"
+        if file_type == "verticality":
+            file_name = "3_verticality.csv"
+
+        return os.path.join(file_dir, file_name)
 
     def build_survey_dictionary(self, has_file, file_dir):
 
-        ''' ISSUE:      Time complexity of `all_data` high.
-            ACTION:     Move SITE_ID as key:[values] - Reduce repetition and
-                        first loop on all data searches
-                        JSON to be: {`site_id`:['easting':'value', ... etc]}
-            PRIORITY:   LOW. Data complexity not high. This is 'nice to have'
-        '''
-
         if not has_file:
-            file_dir = self.get_file_location()
+            file_dir = self.get_file_location("survey")
 
         if not file_dir:
             return [], None
@@ -52,7 +61,7 @@ class ReadData():
 
     def build_lith_dictionary(self, parent, has_file, file_dir):
         if not has_file:
-            file_dir = self.get_file_location()
+            file_dir = self.get_file_location("lithology")
 
         if not file_dir:
             return parent.all_data, None
@@ -99,7 +108,7 @@ class ReadData():
 
     def build_dh_survey_dictionary(self, parent, has_file, file_dir):
         if not has_file:
-            file_dir = self.get_file_location()
+            file_dir = self.get_file_location("verticality")
 
         if not file_dir:
             return parent.all_data, None
