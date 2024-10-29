@@ -23,29 +23,6 @@ Currently supports:
 
 - Minimum Curvature Desurvey - Drill String and Lithology desurvey mapping.
 
-Planned tasks:
-- Basemap imagery support.
-
-- Cross-section draw.
-
-- Synthetic hole import/export.
-
-- LIDAR dot-imagery import support.
-
-- SHP import support.
-
-- Predictive lithology where downhole survey does not extend to lithology TD.
-
-- Expediate text drawing. Currently text values are plotted as one object per
-  instance. This results in significant slowdown at larger text volumes.
-
-- Downhole plotting currently 'magic number' two meters when not desurvey.
-  This will be moved to a user accessible value/assess viability of string type
-  plotting over point plotting to create a single downhole visual entity.
-
-- Highlighting of statistically significant angle variance of WSECT between holes
-  to assist in fault delineation or regions of interest.
-
 Known issues:
 - External hole to selected radius will occasionally plot downhole string in
   addition to selected radius. Does not impact triangulations nor visual obs
